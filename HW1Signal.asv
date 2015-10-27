@@ -98,7 +98,7 @@ for n = 1:length(s)
     K(k) = P(k)*phi(k);
     end
     e(n) = s(n)-c_hatRLS'*phi;
-    c_hatRLS = c_hatRLS+K*e(n);
+    c_hatRLS = c_hatRLS+K(k)*e(n);
     
 end
 
