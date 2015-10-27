@@ -79,9 +79,9 @@ end
 
 
 % RLS on unknown delay
-delay1 = floor([rand rand rand]*5000);
+delay1 = floor([rand rand rand]*15000);
 c_hatRLS = zeros(3,1);
-rho = 100000;
+rho = 1000;
 N = 3;
 P = rho*eye(N);
 lambda = 0.99;
@@ -95,12 +95,14 @@ for n = 1:length(s)
             phi(m) = 0;
         end
     end
-    %P(n) = (1/lambda)*(P(n)-(P(n)*phi*(phi')*P(n))/(lambda+((phi')*P(n)*phi)));
-    P=(P-(P*phi*transpose(phi)*P)/(lambda+transpose(phi)*P*phi))/lambda;
-    K = P*phi;
     
+    %P(n) = (1/lambda)*(P(n)-(P(n)*phi*(phi')*P(n))/(lambda+((phi')*P(n)*phi)));
+    %P=(P-(P*phi*transpose(phi)*P)/(lambda+transpose(phi)*P*phi))/lambda
+    %K = P*phi;
+    K = P*phi/(lambda+(phi')*P*phi);
     e(n) = s(n)-c_hatRLS'*phi;
     c_hatRLS = c_hatRLS+transpose(K'*e(n));
+    
 end
 
 disp(c_hatRLS)
@@ -129,7 +131,6 @@ end
 
 
 disp(c_hatLMS)
-
 
 
 
