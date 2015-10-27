@@ -2,6 +2,7 @@
 % Vocal - near end signal
 % Drum  - far  end signal
 clear all
+close all
 
 [V,Fs_V] = audioread('vocal.wav');
 [DL,Fs_D] = audioread('drumloop.wav');
@@ -76,7 +77,7 @@ for n = 1:length(DL)
     c_hat=c_hat+2*my*phi*e(n);
 end
 
-delay1 = [randn randn randn]*15000;
+delay1 = floor([rand rand rand]*30000);
 c_hatRLS = zeros(3,1);
 rho = 1000;
 N = 3;
@@ -86,23 +87,24 @@ phi = zeros(3,1);
 e = zeros(length(DL),1);
 for n = 1:length(s)
     for m = 1:3
-        if n-delay(m)>0
+        if n-delay1(m)>0
             phi(m) = DL(n-delay1(m));
         else
             phi(m) = 0;
         end
     end
+    if (max(phi) ~= 0) 
     for k = 1:3
     %P(n) = (1/lambda)*(P(n)-(P(n)*phi*(phi')*P(n))/(lambda+((phi')*P(n)*phi)));
-    P(k)=(P(k)-(P(k)*phi(k)*transpose(phi(k)*P(k))/(lambda+transpose(phi(k))*P(k)*phi(k))))/lambda;
+    P(k,k)=(P(k,k)-(P(k,k)*phi(k)*transpose(phi(k)*P(k,k))/(lambda+transpose(phi(k))*P(k,k)*phi(k))))/lambda;
     K(k) = P(k)*phi(k);
     end
     e(n) = s(n)-c_hatRLS'*phi;
-    c_hatRLS = c_hatRLS+K*e(n);
-    
+    c_hatRLS = c_hatRLS+transpose(K*e(n));
+    end
 end
 
-
+disp(c_hatRLS)
 
 
 
