@@ -56,7 +56,10 @@ t_s = 1:length(s);
 figure(3);
 plot(t_s,s);
 
-%Estimation of c
+
+
+%-------------------------------------------------------------------------
+%Estimation of c usin LMS
 
 c_hat = zeros(3,1);
 my = 0.01;
@@ -77,6 +80,61 @@ for n = 1:length(DL)
     c_hat=c_hat+2*my*phi*e(n);
 end
 
+
+%Estimation of c using RLS
+
+c_hatRLS1 = zeros(3,1);
+rho = 1000;
+N = 3;
+P = rho*eye(N);
+lambda = 0.99;
+phi = zeros(3,1);
+e = zeros(length(DL),1);
+for n = 1:length(s)
+    for m = 1:3
+        if n-delay(m)>0
+            phi(m) = DL(n-delay(m));
+        else
+            phi(m) = 0;
+        end
+    end
+    
+    %P(n) = (1/lambda)*(P(n)-(P(n)*phi*(phi')*P(n))/(lambda+((phi')*P(n)*phi)));
+    %P=(P-(P*phi*transpose(phi)*P)/(lambda+transpose(phi)*P*phi))/lambda
+    %K = P*phi;
+    K = P*phi/(lambda+(phi')*P*phi);
+    e(n) = s(n)-c_hatRLS1'*phi;
+    c_hatRLS1 = c_hatRLS1+transpose(K'*e(n));
+    
+end
+disp(c_hatRLS1)
+
+
+%-------------------------------------------------------------------------
+
+% LMS on unknown delay..
+delay1 = floor([rand rand rand]*5000);
+c_hatLMS = zeros(3,1);
+my = 0.01;
+DL(length(DL)+1:length(s)) = 0;
+y_hat=zeros(length(DL),1);
+e=zeros(length(DL),1);
+phi=zeros(3,1);
+for n = 1:length(DL)
+    for m = 1:3
+        if n-delay1(m)>0
+            phi(m)=DL(n-delay1(m));
+        else
+            phi(m)=0;
+        end
+    end
+    y_hat(n)=transpose(c_hatLMS)*phi;
+    e(n)=s(n)-y_hat(n);
+    c_hatLMS=c_hatLMS+2*my*phi*e(n);
+end
+
+
+disp(c_hatLMS)
 
 % RLS on unknown delay
 delay1 = floor([rand rand rand]*15000);
@@ -108,29 +166,9 @@ end
 disp(c_hatRLS)
 
 
-% LMS on unknown delay..
-delay1 = floor([rand rand rand]*5000);
-c_hatLMS = zeros(3,1);
-my = 0.01;
-DL(length(DL)+1:length(s)) = 0;
-y_hat=zeros(length(DL),1);
-e=zeros(length(DL),1);
-phi=zeros(3,1);
-for n = 1:length(DL)
-    for m = 1:3
-        if n-delay1(m)>0
-            phi(m)=DL(n-delay1(m));
-        else
-            phi(m)=0;
-        end
-    end
-    y_hat(n)=transpose(c_hatLMS)*phi;
-    e(n)=s(n)-y_hat(n);
-    c_hatLMS=c_hatLMS+2*my*phi*e(n);
-end
 
 
-disp(c_hatLMS)
+%-------------------------------------------------------------------------
 
 
 
