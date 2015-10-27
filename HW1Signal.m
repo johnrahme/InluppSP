@@ -80,14 +80,16 @@ for n = 1:length(DL)
     c_hat=c_hat+2*my*phi*e(n);
 end
 
-
+disp('LMS known: ')
+disp(c_hat);
 %Estimation of c using RLS
 
 c_hatRLS1 = zeros(3,1);
-rho = 1000;
+%A lot of disturbance since white noise, we need a small rho
+rho = 0.01;
 N = 3;
 P = rho*eye(N);
-lambda = 0.99;
+lambda = 0.98;
 phi = zeros(3,1);
 e = zeros(length(DL),1);
 for n = 1:length(s)
@@ -107,13 +109,14 @@ for n = 1:length(s)
     c_hatRLS1 = c_hatRLS1+transpose(K'*e(n));
     
 end
+disp('RLS known: ')
 disp(c_hatRLS1)
 
 
 %-------------------------------------------------------------------------
 
 % LMS on unknown delay..
-delay1 = floor([rand rand rand]*5000);
+delay1 = floor([rand*8000 rand*5000+3000 rand*8000+8000]);
 c_hatLMS = zeros(3,1);
 my = 0.01;
 DL(length(DL)+1:length(s)) = 0;
@@ -133,13 +136,13 @@ for n = 1:length(DL)
     c_hatLMS=c_hatLMS+2*my*phi*e(n);
 end
 
-
+disp('LMS unknown');
 disp(c_hatLMS)
 
 % RLS on unknown delay
-delay1 = floor([rand rand rand]*15000);
+
 c_hatRLS = zeros(3,1);
-rho = 1000;
+%rho = 1000;
 N = 3;
 P = rho*eye(N);
 lambda = 0.99;
@@ -163,10 +166,13 @@ for n = 1:length(s)
     
 end
 
+disp('RLS unknown');
 disp(c_hatRLS)
 
-
-
+disp('actual delay: ');
+disp(delay);
+disp('guessed delay: ');
+disp(delay1);
 
 %-------------------------------------------------------------------------
 
