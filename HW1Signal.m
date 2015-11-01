@@ -90,23 +90,23 @@ rho = 0.01;
 N = 3;
 P = rho*eye(N);
 lambda = 0.98;
-phi = zeros(3,1);
-e = zeros(length(DL),1);
+phi1 = zeros(3,1);
+e1 = zeros(length(DL),1);
 for n = 1:length(s)
     for m = 1:3
         if n-delay(m)>0
-            phi(m) = DL(n-delay(m));
+            phi1(m) = DL(n-delay(m));
         else
-            phi(m) = 0;
+            phi1(m) = 0;
         end
     end
     
     %P(n) = (1/lambda)*(P(n)-(P(n)*phi*(phi')*P(n))/(lambda+((phi')*P(n)*phi)));
     %P=(P-(P*phi*transpose(phi)*P)/(lambda+transpose(phi)*P*phi))/lambda
     %K = P*phi;
-    K = P*phi/(lambda+(phi')*P*phi);
-    e(n) = s(n)-c_hatRLS1'*phi;
-    c_hatRLS1 = c_hatRLS1+transpose(K'*e(n));
+    K1 = P*phi1/(lambda+(phi1')*P*phi1);
+    e1(n) = s(n)-c_hatRLS1'*phi1;
+    c_hatRLS1 = c_hatRLS1+transpose(K1'*e1(n));
     
 end
 disp('RLS known: ')
@@ -116,17 +116,18 @@ disp(c_hatRLS1)
 %-------------------------------------------------------------------------
 
 % LMS on unknown delay..
-delay1 = floor([rand*8000 rand*5000+3000 rand*8000+8000]);
-c_hatLMS = zeros(3,1);
+N_M = 5;
+delay1 = (1/Fs_D:1000/Fs_D:N_M)*Fs_D;
+c_hatLMS = zeros(length(delay1),1);
 my = 0.01;
 DL(length(DL)+1:length(s)) = 0;
 y_hat=zeros(length(DL),1);
 e=zeros(length(DL),1);
-phi=zeros(3,1);
+phi=zeros(length(delay1),1);
 for n = 1:length(DL)
-    for m = 1:3
-        if n-delay1(m)>0
-            phi(m)=DL(n-delay1(m));
+    for m = 1:length(delay1)
+        if floor(n-delay1(m))>0
+            phi(m)=DL(floor(n-delay1(m)));
         else
             phi(m)=0;
         end
@@ -141,17 +142,15 @@ disp(c_hatLMS)
 
 % RLS on unknown delay
 
-c_hatRLS = zeros(3,1);
-%rho = 1000;
-N = 3;
+c_hatRLS = zeros(length(delay1),1);
+N = length(delay1);
 P = rho*eye(N);
-lambda = 0.99;
-phi = zeros(3,1);
+phi = zeros(length(delay1),1);
 e = zeros(length(DL),1);
 for n = 1:length(s)
-    for m = 1:3
-        if n-delay1(m)>0
-            phi(m) = DL(n-delay1(m));
+    for m = 1:length(delay1)
+        if floor(n-delay1(m))>0
+            phi(m)=DL(floor(n-delay1(m)));
         else
             phi(m) = 0;
         end
@@ -162,7 +161,7 @@ for n = 1:length(s)
     %K = P*phi;
     K = P*phi/(lambda+(phi')*P*phi);
     e(n) = s(n)-c_hatRLS'*phi;
-    c_hatRLS = c_hatRLS+transpose(K'*e(n));
+    c_hatRLS = c_hatRLS+transpose(K'*e(n));  
     
 end
 
