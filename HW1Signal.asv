@@ -90,23 +90,23 @@ rho = 0.01;
 N = 3;
 P = rho*eye(N);
 lambda = 0.98;
-phi = zeros(3,1);
-e = zeros(length(DL),1);
+phi1 = zeros(3,1);
+e1 = zeros(length(DL),1);
 for n = 1:length(s)
     for m = 1:3
         if n-delay(m)>0
-            phi(m) = DL(n-delay(m));
+            phi1(m) = DL(n-delay(m));
         else
-            phi(m) = 0;
+            phi1(m) = 0;
         end
     end
     
     %P(n) = (1/lambda)*(P(n)-(P(n)*phi*(phi')*P(n))/(lambda+((phi')*P(n)*phi)));
     %P=(P-(P*phi*transpose(phi)*P)/(lambda+transpose(phi)*P*phi))/lambda
     %K = P*phi;
-    K = P*phi/(lambda+(phi')*P*phi);
-    e(n) = s(n)-c_hatRLS1'*phi;
-    c_hatRLS1 = c_hatRLS1+transpose(K'*e(n));
+    K1 = P*phi1/(lambda+(phi1')*P*phi1);
+    e1(n) = s(n)-c_hatRLS1'*phi1;
+    c_hatRLS1 = c_hatRLS1+transpose(K1'*e1(n));
     
 end
 disp('RLS known: ')
@@ -145,7 +145,6 @@ disp(c_hatLMS)
 c_hatRLS = zeros(length(delay1),1);
 N = length(delay1);
 P = rho*eye(N);
-lambda = 0.99;
 phi = zeros(length(delay1),1);
 e = zeros(length(DL),1);
 for n = 1:length(s)
@@ -175,52 +174,15 @@ disp('guessed delay: ');
 disp(delay1);
 
 %-------------------------------------------------------------------------
+%Remove Y from mixed audio.
 
 
+% Construc echo from c_hat
 
-
-
-
-
-% c_hat_4 = zeros(3,1);
-% data_voc(end+1:length(mixed_signl)) = 0;
-% my_4 = 0.03; % Step size 0.98?
-% e_4 = zeros(length(data_voc),1);
-% y_hat_4 = zeros(length(data_voc),1);
-% phi=zeros(3,1);
-% for n = 1:length(data_voc)
-%     for m=1:3
-%     if n-delay(m)>0
-%     phi(m)=data_voc(n-delay(m));
-%     else
-%      phi(m)=0;
-%     end
-%     end
-%     y_hat_4(n) = transpose(c_hat_4)*phi;
-%     e_4(n) = mixed_signl(n)-y_hat_4(n);
-%     c_hat_4 = c_hat_4+2*my_4*phi*e_4(n);
-% end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+for m = 1:length(delay1)
+for n = delay1(m) + 1:length(DL)+delay1(m)
+    if DL(n-delay1(m)) 
+    y_hat(m,n)=c(1)*DL(n-delay1(m));
+end
+end
 

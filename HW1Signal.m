@@ -161,7 +161,7 @@ for n = 1:length(s)
     %K = P*phi;
     K = P*phi/(lambda+(phi')*P*phi);
     e(n) = s(n)-c_hatRLS'*phi;
-    c_hatRLS = c_hatRLS+transpose(K'*e(n));  
+    c_hatRLS = c_hatRLS+transpose(K'*e(n));
     
 end
 
@@ -174,52 +174,20 @@ disp('guessed delay: ');
 disp(delay1);
 
 %-------------------------------------------------------------------------
+%Remove Y from mixed audio.
 
 
+% Construc echo from c_hat
 
-
-
-
-
-% c_hat_4 = zeros(3,1);
-% data_voc(end+1:length(mixed_signl)) = 0;
-% my_4 = 0.03; % Step size 0.98?
-% e_4 = zeros(length(data_voc),1);
-% y_hat_4 = zeros(length(data_voc),1);
-% phi=zeros(3,1);
-% for n = 1:length(data_voc)
-%     for m=1:3
-%     if n-delay(m)>0
-%     phi(m)=data_voc(n-delay(m));
-%     else
-%      phi(m)=0;
-%     end
-%     end
-%     y_hat_4(n) = transpose(c_hat_4)*phi;
-%     e_4(n) = mixed_signl(n)-y_hat_4(n);
-%     c_hat_4 = c_hat_4+2*my_4*phi*e_4(n);
-% end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+for m = 1:length(delay1)
+    for n = delay1(m) + 1:length(DL)+delay1(m)
+        if (n-delay1(m)) < length(DL)+1
+            y_hat(m,n)=c_hatLMS(m)*DL(n-delay1(m));
+        else
+            y_hat(m,n)= 0;
+        end
+    end
+end
+ Y_hat = sum(y_hat);
+ t_Yhat = 1:length(Y_hat);
+ plot(t,Y_hat)
