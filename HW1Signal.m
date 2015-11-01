@@ -117,7 +117,7 @@ disp(c_hatRLS1)
 
 % LMS on unknown delay..
 N_M = 5;
-delay1 = (1/Fs_D:1000/Fs_D:N_M)*Fs_D;
+delay1 = (1/Fs_D:5000/Fs_D:N_M)*Fs_D;
 c_hatLMS = zeros(length(delay1),1);
 my = 0.01;
 DL(length(DL)+1:length(s)) = 0;
@@ -168,26 +168,89 @@ end
 disp('RLS unknown');
 disp(c_hatRLS)
 
-disp('actual delay: ');
-disp(delay);
-disp('guessed delay: ');
-disp(delay1);
-
 %-------------------------------------------------------------------------
 %Remove Y from mixed audio.
 
 
-% Construc echo from c_hat
-
-for m = 1:length(delay1)
-    for n = delay1(m) + 1:length(DL)+delay1(m)
-        if (n-delay1(m)) < length(DL)+1
-            y_hat(m,n)=c_hatLMS(m)*DL(n-delay1(m));
+% Construc echo from LMS with known delay
+for m = 1:length(delay)
+    for n = 1:length(DL)
+        if ((n-delay(m)) > 0) &&((n-delay(m)) < length(DL))
+            y_hat1(m,n)=c_hat(m)*DL(n-delay(m));
         else
-            y_hat(m,n)= 0;
+            y_hat1(m,n)= 0;
         end
     end
 end
- Y_hat = sum(y_hat);
- t_Yhat = 1:length(Y_hat);
- plot(t,Y_hat)
+Y_hat1 = sum(y_hat1);  %Sum of y_hat with different delays.
+y(length(y)+1:length(Y_hat1)) = 0;
+S_lms1 = s-Y_hat1';  % Mixed audio with y_hat subtracted.
+E1 = ((U-S_lms1).^2); % Squared error.
+
+
+%------------------------------------------------------------------------%
+% Construc echo from RLS with known delay
+for m = 1:length(delay)
+    for n =  1:length(DL)
+        if (((n-delay(m)) < length(DL)) && ((n-delay(m)) > 0))
+            y_hat2(m,n)=c_hatRLS1(m)*DL(n-delay(m));
+        else
+            y_hat2(m,n)= 0;
+        end
+    end
+end
+Y_hat2 = sum(y_hat2);
+S_rls1 = s-Y_hat2';
+E2 = ((U-S_rls1).^2);
+
+
+%------------------------------------------------------------------------%
+% Construc echo from LMS with unknown delay
+for m = 1:length(delay1)
+    for n = 1:length(DL)
+        if (floor(n-delay1(m)) > 0) &&((n-delay1(m)) < length(DL))
+            y_hat3(m,n)=c_hatLMS(m)*DL(floor(n-delay1(m)));
+        else
+            y_hat3(m,n)= 0;
+        end
+    end
+end
+Y_hat3 = sum(y_hat3);
+S_lms2 = s-Y_hat3';
+E3 = ((U-S_lms2).^2);
+
+
+%-------------------------------------------------------------------------%
+% Construc echo from RLS with unknown delay
+for m = 1:length(delay1)
+    for n =  1:length(DL)
+        if (floor(n-delay1(m)) > 0) &&((n-delay1(m)) < length(DL))
+            y_hat4(m,n)=c_hatRLS(m)*DL(floor(n-delay1(m)));
+        else
+            y_hat4(m,n)= 0;
+        end
+    end
+end
+Y_hat4 = sum(y_hat4);
+S_rls2 = s-Y_hat4';
+E4 = ((U-S_rls2).^2);
+
+
+t_hat = 1:length(S_lms1);  %Construct a time vector for the plots to come.
+
+
+figure(4); %Plots of errors between s & y_hat.
+subplot(2,2,1);
+plot(t_hat,E1)
+title('Known delay, LMS')
+subplot(2,2,2);
+plot(t_hat,E2)
+title('Known delay, RLS')
+subplot(2,2,3);
+plot(t_hat,E3)
+title('Unknown delay, LMS')
+subplot(2,2,4);
+plot(t_hat,E4)
+title('Unknown delay, RLS')
+
+%-------------------------------------------------------------------------%
