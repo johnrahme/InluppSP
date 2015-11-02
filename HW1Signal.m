@@ -61,12 +61,14 @@ plot(t_s,s);
 %-------------------------------------------------------------------------
 %Estimation of c usin LMS
 
-c_hat = zeros(3,1);
+c_hatLMS1 = zeros(3,1);
 my = 0.01;
 DL(length(DL)+1:length(s)) = 0;
 y_hat=zeros(length(DL),1);
 e=zeros(length(DL),1);
 phi=zeros(3,1);
+C_LMS_mat1 = zeros(3,length(DL));
+tic;
 for n = 1:length(DL)
     for m = 1:3
         if n-delay(m)>0
@@ -75,15 +77,16 @@ for n = 1:length(DL)
             phi(m)=0;
         end
     end
-    y_hat(n)=transpose(c_hat)*phi;
+    y_hat(n)=transpose(c_hatLMS1)*phi;
     e(n)=s(n)-y_hat(n);
-    c_hat=c_hat+2*my*phi*e(n);
+    c_hatLMS1=c_hatLMS1+2*my*phi*e(n);
+    C_LMS_mat1(:,n) = c_hatLMS1;
 end
-
+timerLMS1 = toc;
 disp('LMS known: ')
-disp(c_hat);
-%Estimation of c using RLS
+disp(c_hatLMS1);
 
+%Estimation of c using RLS
 c_hatRLS1 = zeros(3,1);
 %A lot of disturbance since white noise, we need a small rho
 rho = 0.01;
@@ -92,6 +95,8 @@ P = rho*eye(N);
 lambda = 0.98;
 phi1 = zeros(3,1);
 e1 = zeros(length(DL),1);
+C_RLS_mat1 = zeros(3,length(DL));
+tic;
 for n = 1:length(s)
     for m = 1:3
         if n-delay(m)>0
@@ -106,9 +111,10 @@ for n = 1:length(s)
     %K = P*phi;
     K1 = P*phi1/(lambda+(phi1')*P*phi1);
     e1(n) = s(n)-c_hatRLS1'*phi1;
-    c_hatRLS1 = c_hatRLS1+transpose(K1'*e1(n));
-    
+    c_hatRLS1 = c_hatRLS1+transpose(K1'*e1(n));    
+    C_RLS_mat1(:,n) = c_hatRLS1;
 end
+timerRLS1 = toc;
 disp('RLS known: ')
 disp(c_hatRLS1)
 
@@ -118,12 +124,13 @@ disp(c_hatRLS1)
 % LMS on unknown delay..
 N_M = 5;
 delay1 = (1/Fs_D:5000/Fs_D:N_M)*Fs_D;
-c_hatLMS = zeros(length(delay1),1);
+c_hatLMS2 = zeros(length(delay1),1);
 my = 0.01;
 DL(length(DL)+1:length(s)) = 0;
 y_hat=zeros(length(DL),1);
 e=zeros(length(DL),1);
 phi=zeros(length(delay1),1);
+tic;
 for n = 1:length(DL)
     for m = 1:length(delay1)
         if floor(n-delay1(m))>0
@@ -132,21 +139,22 @@ for n = 1:length(DL)
             phi(m)=0;
         end
     end
-    y_hat(n)=transpose(c_hatLMS)*phi;
+    y_hat(n)=transpose(c_hatLMS2)*phi;
     e(n)=s(n)-y_hat(n);
-    c_hatLMS=c_hatLMS+2*my*phi*e(n);
+    c_hatLMS2=c_hatLMS2+2*my*phi*e(n);
 end
-
+timerLMS2 = toc;
 disp('LMS unknown');
-disp(c_hatLMS)
+disp(c_hatLMS2)
 
 % RLS on unknown delay
 
-c_hatRLS = zeros(length(delay1),1);
+c_hatRLS2 = zeros(length(delay1),1);
 N = length(delay1);
 P = rho*eye(N);
 phi = zeros(length(delay1),1);
 e = zeros(length(DL),1);
+tic;
 for n = 1:length(s)
     for m = 1:length(delay1)
         if floor(n-delay1(m))>0
@@ -160,13 +168,13 @@ for n = 1:length(s)
     %P=(P-(P*phi*transpose(phi)*P)/(lambda+transpose(phi)*P*phi))/lambda
     %K = P*phi;
     K = P*phi/(lambda+(phi')*P*phi);
-    e(n) = s(n)-c_hatRLS'*phi;
-    c_hatRLS = c_hatRLS+transpose(K'*e(n));
-    
+    e(n) = s(n)-c_hatRLS2'*phi;
+    c_hatRLS2 = c_hatRLS2+transpose(K'*e(n));
+   
 end
-
+timerRLS2 = toc;
 disp('RLS unknown');
-disp(c_hatRLS)
+disp(c_hatRLS2)
 
 %-------------------------------------------------------------------------
 %Remove Y from mixed audio.
@@ -176,14 +184,14 @@ disp(c_hatRLS)
 for m = 1:length(delay)
     for n = 1:length(DL)
         if ((n-delay(m)) > 0) &&((n-delay(m)) < length(DL))
-            y_hat1(m,n)=c_hat(m)*DL(n-delay(m));
+            y_hat1(m,n)=c_hatLMS1(m)*DL(n-delay(m));
         else
             y_hat1(m,n)= 0;
         end
     end
 end
 Y_hat1 = sum(y_hat1);  %Sum of y_hat with different delays.
-y(length(y)+1:length(Y_hat1)) = 0;
+
 S_lms1 = s-Y_hat1';  % Mixed audio with y_hat subtracted.
 E1 = ((U-S_lms1).^2); % Squared error.
 
@@ -209,7 +217,7 @@ E2 = ((U-S_rls1).^2);
 for m = 1:length(delay1)
     for n = 1:length(DL)
         if (floor(n-delay1(m)) > 0) &&((n-delay1(m)) < length(DL))
-            y_hat3(m,n)=c_hatLMS(m)*DL(floor(n-delay1(m)));
+            y_hat3(m,n)=c_hatLMS2(m)*DL(floor(n-delay1(m)));
         else
             y_hat3(m,n)= 0;
         end
@@ -225,7 +233,7 @@ E3 = ((U-S_lms2).^2);
 for m = 1:length(delay1)
     for n =  1:length(DL)
         if (floor(n-delay1(m)) > 0) &&((n-delay1(m)) < length(DL))
-            y_hat4(m,n)=c_hatRLS(m)*DL(floor(n-delay1(m)));
+            y_hat4(m,n)=c_hatRLS2(m)*DL(floor(n-delay1(m)));
         else
             y_hat4(m,n)= 0;
         end
@@ -253,4 +261,88 @@ subplot(2,2,4);
 plot(t_hat,E4)
 title('Unknown delay, RLS')
 
+
+%Plots of recovered signals
+figure(5);
+subplot(2,2,1);
+plot(t_hat,S_lms1)
+title('Known delay, LMS')
+subplot(2,2,2);
+plot(t_hat,S_rls1)
+title('Known delay, RLS')
+subplot(2,2,3);
+plot(t_hat,S_lms2)
+title('Unknown delay, LMS')
+subplot(2,2,4);
+plot(t_hat,S_rls2)
+title('Unknown delay, RLS')
+
 %-------------------------------------------------------------------------%
+y(length(y)+1:length(Y_hat1)) = 0;
+%Squared errors between y & y_hat:
+E_Ylms1 = (y-Y_hat1').^2;
+E_Yrls1 = (y-Y_hat2').^2;
+E_Ylms2 = (y-Y_hat3').^2;
+E_Yrls2 = (y-Y_hat4').^2;
+
+figure(6); % PLots of squared errors between y & y_hat:
+subplot(2,2,1);
+plot(t_hat,E_Ylms1)
+title('Known delay, LMS')
+subplot(2,2,2);
+plot(t_hat,E_Yrls1)
+title('Known delay, RLS')
+subplot(2,2,3);
+plot(t_hat,E_Ylms2)
+title('Unknown delay, LMS')
+subplot(2,2,4);
+plot(t_hat,E_Yrls2)
+title('Unknown delay, RLS')
+
+
+Y_avg_lms1 = mean((y-Y_hat1').^2);
+Y_avg_rls1 = mean((y-Y_hat2').^2);
+Y_avg_lms2 = mean((y-Y_hat3').^2);
+Y_avg_rls2 = mean((y-Y_hat4').^2);
+
+disp(['Time-average squared error with known delays for LMS: ', num2str(Y_avg_lms1)])
+
+disp(['Time-average squared error with known delays for RLS: ', num2str(Y_avg_rls1)])
+
+disp(['Time-average squared error with unknown delays for LMS: ', num2str(Y_avg_lms2)])
+
+disp(['Time-average squared error with unknown delays for RLS: ', num2str(Y_avg_rls2)])
+
+
+%-------------------------------------------------------------------------%
+
+%Plot evolution of parameters c_hat compared to real c.
+t_mat=1:length(C_LMS_mat1);
+c_comp = transpose(c)*ones(1, length(t_mat));
+figure(7)
+plot(t_mat,C_LMS_mat1(1,:),t_mat,C_LMS_mat1(2,:),t_mat,C_LMS_mat1(3,:),t_mat,c_comp)
+figure(8)
+plot(t_mat,C_RLS_mat1(1,:),t_mat,C_RLS_mat1(2,:),t_mat,C_RLS_mat1(3,:),t_mat,c_comp)
+
+%-------------------------------------------------------------------------%
+%Average squared errors between c & c_hat in RLS & LMS.:
+
+%For LMS:
+E_Clms = mean((c-c_hatLMS1').^2);
+E_Crls = mean((c-c_hatRLS1').^2);
+disp(['Average squared error in parameter using LMS: ', num2str(E_Clms)])
+disp(['Average squared error in parameter using RLS: ', num2str(E_Crls)])
+
+
+%-------------------------------------------------------------------------%
+
+%Time difference for parameter estimation:
+
+disp(['Time for LMS with known delays: ', num2str(timerLMS1)])
+disp(['Time for RLS with known delays: ', num2str(timerRLS1)])
+disp(['Time for LMS with unknown delays: ', num2str(timerLMS2)])
+disp(['Time for RLS with unknown delays: ', num2str(timerRLS2)])
+
+
+%-------------------------------------------------------------------------%
+
