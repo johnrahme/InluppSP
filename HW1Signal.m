@@ -67,13 +67,13 @@ title('Audio mix')
 %Estimation of c usin LMS
 
 c_hatLMS1 = zeros(3,1);
-my = 0.01;  %Step size.
+my = 0.001;  %Step size.
 DL(length(DL)+1:length(s)) = 0;
 y_hat=zeros(length(DL),1);
 e=zeros(length(DL),1);
 phi=zeros(3,1);
 C_LMS_mat1 = zeros(3,length(DL));
-tic;
+tic; % Initiation of timer.
 for n = 1:length(DL)
     for m = 1:3
         if n-delay(m)>0
@@ -87,7 +87,7 @@ for n = 1:length(DL)
     c_hatLMS1=c_hatLMS1+2*my*phi*e(n);
     C_LMS_mat1(:,n) = c_hatLMS1;
 end
-timerLMS1 = toc;
+timerLMS1 = toc; % Termination of timer.
 disp('LMS known: ')
 disp(c_hatLMS1);
 disp(' ')
@@ -128,7 +128,6 @@ disp(' ')
 N_M = 5; %upper value, when multiplied with Fs_D, in delay vector.
 delay1 = (1/Fs_D:5000/Fs_D:N_M)*Fs_D; %Unknown delay vector.
 c_hatLMS2 = zeros(length(delay1),1);
-my = 0.01;
 DL(length(DL)+1:length(s)) = 0;
 y_hat=zeros(length(DL),1);
 e=zeros(length(DL),1);
