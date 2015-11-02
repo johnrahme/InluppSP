@@ -40,7 +40,7 @@ plot(t1,y);
 title('Echo')
 subplot(2,1,2);
 plot(t2,DL);
-title('')
+title('Far end signal')
 
 N = sqrt(0.003)*randn(length(V),1); %Generation of random noise.
 U = V+N;  %Sum of Far end signal and noise.
@@ -48,8 +48,10 @@ t_u = 1:length(U);
 figure(2);
 subplot(2,1,1);
 plot(t_u,U)
+title('Noise contaminated near end signal.')
 subplot(2,1,2);
 plot(t_u,V);
+title('Near end signal')
 
 %Sum of noise and echo
 U(length(U)+1:length(y)) = 0;
@@ -57,6 +59,7 @@ s = y+U; %Mixed audio mix.
 t_s = 1:length(s);
 figure(3);
 plot(t_s,s);
+title('Audio mix')
 
 
 
@@ -87,6 +90,7 @@ end
 timerLMS1 = toc;
 disp('LMS known: ')
 disp(c_hatLMS1);
+disp()                                                                                                                                                                                                                                                            ccc,    
 
 %Estimation of c using RLS
 c_hatRLS1 = zeros(3,1);
@@ -115,6 +119,7 @@ end
 timerRLS1 = toc;
 disp('RLS known: ')
 disp(c_hatRLS1)
+disp()
 
 
 %-------------------------------------------------------------------------
@@ -245,7 +250,7 @@ E4 = ((U-S_rls2).^2);
 t_hat = 1:length(S_lms1);  %Construct a time vector for the plots to come.
 
 
-figure(4); %Plots of errors between s & y_hat.
+figure(4); %Plots of errors between new S and U.
 subplot(2,2,1);
 plot(t_hat,E1)
 title('Known delay,(U-rec.signal)^2, LMS')
@@ -304,12 +309,10 @@ Y_avg_lms2 = mean((y-Y_hat3').^2);
 Y_avg_rls2 = mean((y-Y_hat4').^2);
 
 disp(['Time-average squared error with known delays for LMS: ', num2str(Y_avg_lms1)])
-
 disp(['Time-average squared error with known delays for RLS: ', num2str(Y_avg_rls1)])
-
 disp(['Time-average squared error with unknown delays for LMS: ', num2str(Y_avg_lms2)])
-
 disp(['Time-average squared error with unknown delays for RLS: ', num2str(Y_avg_rls2)])
+disp()
 
 
 %-------------------------------------------------------------------------%
@@ -332,6 +335,7 @@ E_Clms = mean((c-c_hatLMS1').^2);
 E_Crls = mean((c-c_hatRLS1').^2);
 disp(['Average squared error in parameter using LMS: ', num2str(E_Clms)])
 disp(['Average squared error in parameter using RLS: ', num2str(E_Crls)])
+disp()
 
 
 %-------------------------------------------------------------------------%

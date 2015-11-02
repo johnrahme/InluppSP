@@ -9,8 +9,8 @@ close all
 
 phi = zeros(length(V),1);
 theta = zeros(length(V),1);
-delay = [0.05 0.1 0.3].*Fs_D;
-c=[0.1 0.4 0.2];
+delay = [0.05 0.1 0.3].*Fs_D; %Known delay.
+c=[0.1 0.4 0.2]; %Guessed parameters. 
 
 %Same length
 DL(length(DL)+1:length(V))=0;
@@ -55,7 +55,7 @@ title('Near end signal')
 
 %Sum of noise and echo
 U(length(U)+1:length(y)) = 0;
-s = y+U; %Mixed audio mix.
+s = y+U; %Mixed audio.
 t_s = 1:length(s);
 figure(3);
 plot(t_s,s);
@@ -67,7 +67,7 @@ title('Audio mix')
 %Estimation of c usin LMS
 
 c_hatLMS1 = zeros(3,1);
-my = 0.01;
+my = 0.01;  %Step size.
 DL(length(DL)+1:length(s)) = 0;
 y_hat=zeros(length(DL),1);
 e=zeros(length(DL),1);
@@ -90,10 +90,11 @@ end
 timerLMS1 = toc;
 disp('LMS known: ')
 disp(c_hatLMS1);
+disp(' ')
 
 %Estimation of c using RLS
 c_hatRLS1 = zeros(3,1);
-%A lot of disturbance since white noise, we need a small rho
+%A lot of disturbance since white noise, we need a small rho.
 rho = 0.01;
 N = 3;
 P = rho*eye(N);
@@ -118,6 +119,7 @@ end
 timerRLS1 = toc;
 disp('RLS known: ')
 disp(c_hatRLS1)
+disp(' ')
 
 
 %-------------------------------------------------------------------------
@@ -147,9 +149,9 @@ end
 timerLMS2 = toc;
 disp('LMS unknown');
 disp(c_hatLMS2)
+disp(' ')
 
 % RLS on unknown delay
-
 c_hatRLS2 = zeros(length(delay1),1);
 N = length(delay1);
 P = rho*eye(N);
@@ -172,7 +174,7 @@ end
 timerRLS2 = toc;
 disp('RLS unknown');
 disp(c_hatRLS2)
-
+disp(' ')
 %-------------------------------------------------------------------------
 %Remove Y from mixed audio.
 
@@ -189,7 +191,6 @@ for m = 1:length(delay)
     end
 end
 Y_hat1 = sum(y_hat1);  %Sum of y_hat with different delays.
-
 S_lms1 = s-Y_hat1';  % Mixed audio with y_hat subtracted.
 E1 = ((U-S_lms1).^2); % Squared error.
 
@@ -248,7 +249,7 @@ E4 = ((U-S_rls2).^2);
 t_hat = 1:length(S_lms1);  %Construct a time vector for the plots to come.
 
 
-figure(4); %Plots of errors between s & y_hat.
+figure(4); %Plots of errors between new S and U.
 subplot(2,2,1);
 plot(t_hat,E1)
 title('Known delay,(U-rec.signal)^2, LMS')
@@ -307,12 +308,10 @@ Y_avg_lms2 = mean((y-Y_hat3').^2);
 Y_avg_rls2 = mean((y-Y_hat4').^2);
 
 disp(['Time-average squared error with known delays for LMS: ', num2str(Y_avg_lms1)])
-
 disp(['Time-average squared error with known delays for RLS: ', num2str(Y_avg_rls1)])
-
 disp(['Time-average squared error with unknown delays for LMS: ', num2str(Y_avg_lms2)])
-
 disp(['Time-average squared error with unknown delays for RLS: ', num2str(Y_avg_rls2)])
+disp(' ')
 
 
 %-------------------------------------------------------------------------%
@@ -335,6 +334,7 @@ E_Clms = mean((c-c_hatLMS1').^2);
 E_Crls = mean((c-c_hatRLS1').^2);
 disp(['Average squared error in parameter using LMS: ', num2str(E_Clms)])
 disp(['Average squared error in parameter using RLS: ', num2str(E_Crls)])
+disp(' ')
 
 
 %-------------------------------------------------------------------------%
@@ -345,7 +345,7 @@ disp(['Time for LMS with known delays: ', num2str(timerLMS1)])
 disp(['Time for RLS with known delays: ', num2str(timerRLS1)])
 disp(['Time for LMS with unknown delays: ', num2str(timerLMS2)])
 disp(['Time for RLS with unknown delays: ', num2str(timerRLS2)])
-
+disp(' ')
 
 %-------------------------------------------------------------------------%
 
