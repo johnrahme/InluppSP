@@ -40,8 +40,8 @@ plot(t1,y);
 subplot(2,1,2);
 plot(t2,DL);
 
-N = sqrt(0.003)*randn(length(V),1);
-U = V+N;
+N = sqrt(0.003)*randn(length(V),1); %Generation of random noise.
+U = V+N;  %Sum of Far end signal and noise.
 t_u = 1:length(U);
 figure(2);
 subplot(2,1,1);
@@ -51,7 +51,7 @@ plot(t_u,V);
 
 %Sum of noise and echo
 U(length(U)+1:length(y)) = 0;
-s = y+U;
+s = y+U; %Mixed audio mix.
 t_s = 1:length(s);
 figure(3);
 plot(t_s,s);
@@ -105,10 +105,6 @@ for n = 1:length(s)
             phi1(m) = 0;
         end
     end
-    
-    %P(n) = (1/lambda)*(P(n)-(P(n)*phi*(phi')*P(n))/(lambda+((phi')*P(n)*phi)));
-    %P=(P-(P*phi*transpose(phi)*P)/(lambda+transpose(phi)*P*phi))/lambda
-    %K = P*phi;
     K1 = P*phi1/(lambda+(phi1')*P*phi1);
     e1(n) = s(n)-c_hatRLS1'*phi1;
     c_hatRLS1 = c_hatRLS1+transpose(K1'*e1(n));    
@@ -122,8 +118,8 @@ disp(c_hatRLS1)
 %-------------------------------------------------------------------------
 
 % LMS on unknown delay..
-N_M = 5;
-delay1 = (1/Fs_D:5000/Fs_D:N_M)*Fs_D;
+N_M = 5; %upper value, when multiplied with Fs_D, in delay vector.
+delay1 = (1/Fs_D:5000/Fs_D:N_M)*Fs_D; %Unknown delay vector.
 c_hatLMS2 = zeros(length(delay1),1);
 my = 0.01;
 DL(length(DL)+1:length(s)) = 0;
@@ -163,10 +159,6 @@ for n = 1:length(s)
             phi(m) = 0;
         end
     end
-    
-    %P(n) = (1/lambda)*(P(n)-(P(n)*phi*(phi')*P(n))/(lambda+((phi')*P(n)*phi)));
-    %P=(P-(P*phi*transpose(phi)*P)/(lambda+transpose(phi)*P*phi))/lambda
-    %K = P*phi;
     K = P*phi/(lambda+(phi')*P*phi);
     e(n) = s(n)-c_hatRLS2'*phi;
     c_hatRLS2 = c_hatRLS2+transpose(K'*e(n));
@@ -181,6 +173,7 @@ disp(c_hatRLS2)
 
 
 % Construc echo from LMS with known delay
+y_hat1 = zeros(length(delay1),length(DL));
 for m = 1:length(delay)
     for n = 1:length(DL)
         if ((n-delay(m)) > 0) &&((n-delay(m)) < length(DL))
@@ -198,6 +191,7 @@ E1 = ((U-S_lms1).^2); % Squared error.
 
 %------------------------------------------------------------------------%
 % Construc echo from RLS with known delay
+y_hat2 = zeros(length(delay1),length(DL));
 for m = 1:length(delay)
     for n =  1:length(DL)
         if (((n-delay(m)) < length(DL)) && ((n-delay(m)) > 0))
@@ -214,6 +208,7 @@ E2 = ((U-S_rls1).^2);
 
 %------------------------------------------------------------------------%
 % Construc echo from LMS with unknown delay
+y_hat3 = zeros(length(delay1),length(DL));
 for m = 1:length(delay1)
     for n = 1:length(DL)
         if (floor(n-delay1(m)) > 0) &&((n-delay1(m)) < length(DL))
@@ -230,6 +225,7 @@ E3 = ((U-S_lms2).^2);
 
 %-------------------------------------------------------------------------%
 % Construc echo from RLS with unknown delay
+y_hat4 = zeros(length(delay1),length(DL));
 for m = 1:length(delay1)
     for n =  1:length(DL)
         if (floor(n-delay1(m)) > 0) &&((n-delay1(m)) < length(DL))
@@ -250,32 +246,32 @@ t_hat = 1:length(S_lms1);  %Construct a time vector for the plots to come.
 figure(4); %Plots of errors between s & y_hat.
 subplot(2,2,1);
 plot(t_hat,E1)
-title('Known delay, LMS')
+title('Known delay,(U-rec.signal)^2, LMS')
 subplot(2,2,2);
 plot(t_hat,E2)
-title('Known delay, RLS')
+title('Known delay,(U-rec.signal)^2, RLS')
 subplot(2,2,3);
 plot(t_hat,E3)
-title('Unknown delay, LMS')
+title('Unknown delay,(U-rec.signal)^2, LMS')
 subplot(2,2,4);
 plot(t_hat,E4)
-title('Unknown delay, RLS')
+title('Unknown delay,(U-rec.signal)^2, RLS')
 
 
 %Plots of recovered signals
 figure(5);
 subplot(2,2,1);
 plot(t_hat,S_lms1)
-title('Known delay, LMS')
+title('Known delay,Recovered signal, LMS')
 subplot(2,2,2);
 plot(t_hat,S_rls1)
-title('Known delay, RLS')
+title('Known delay,Recovered signal, RLS')
 subplot(2,2,3);
 plot(t_hat,S_lms2)
-title('Unknown delay, LMS')
+title('Unknown delay,Recovered signal, LMS')
 subplot(2,2,4);
 plot(t_hat,S_rls2)
-title('Unknown delay, RLS')
+title('Unknown delay,Recovered signal, RLS')
 
 %-------------------------------------------------------------------------%
 y(length(y)+1:length(Y_hat1)) = 0;
@@ -288,16 +284,16 @@ E_Yrls2 = (y-Y_hat4').^2;
 figure(6); % PLots of squared errors between y & y_hat:
 subplot(2,2,1);
 plot(t_hat,E_Ylms1)
-title('Known delay, LMS')
+title('Known delay,(y-y_hat)^2, LMS')
 subplot(2,2,2);
 plot(t_hat,E_Yrls1)
-title('Known delay, RLS')
+title('Known delay,(y-y_hat)^2, RLS')
 subplot(2,2,3);
 plot(t_hat,E_Ylms2)
-title('Unknown delay, LMS')
+title('Unknown delay,(y-y_hat)^2, LMS')
 subplot(2,2,4);
 plot(t_hat,E_Yrls2)
-title('Unknown delay, RLS')
+title('Unknown delay,(y-y_hat)^2, RLS')
 
 
 Y_avg_lms1 = mean((y-Y_hat1').^2);
